@@ -1,0 +1,14 @@
+# NEVER commit found wallets — they contain private keys
+found_slot_*.txt
+all_wallets.txt
+*.key
+
+# build artifacts / binaries
+miner.exe
+*.exe
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/

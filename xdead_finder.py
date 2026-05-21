@@ -2,7 +2,7 @@
 xDead Wallet Finder
 ===================
 Generates random Ethereum wallets and searches for addresses matching
-the pattern 0xdead00001 — 0xdead20000.
+the pattern 0xdead00001 — 0xdead10000.
 
 When found: saves private key + address to a .txt file.
 
@@ -13,19 +13,18 @@ Usage:
 
 import os
 import re
-import sys
 import time
 import argparse
 import multiprocessing
-from eth_account import Account
+from eth_keys import keys as eth_keys
 
 
 TARGET_MIN = 1
-TARGET_MAX = 20000
+TARGET_MAX = 10000
 
 
 def check_address(address: str) -> int | None:
-    """Return slot number if address matches 0xdead00001-0xdead20000, else None."""
+    """Return slot number if address matches 0xdead00001-0xdead10000, else None."""
     lower = address.lower()
     if not lower.startswith("0xdead"):
         return None
@@ -59,9 +58,13 @@ def worker(worker_id: int, found_queue: multiprocessing.Queue, stop_event: multi
     start = time.time()
 
     while not stop_event.is_set():
-        private_key = "0x" + os.urandom(32).hex()
-        account = Account.from_key(private_key)
-        address = account.address
+        pk_bytes = os.urandom(32)
+        try:
+            pk = eth_keys.PrivateKey(pk_bytes)
+            address = pk.public_key.to_checksum_address()
+        except Exception:
+            continue
+        private_key = "0x" + pk_bytes.hex()
         attempts += 1
 
         slot = check_address(address)
@@ -87,7 +90,7 @@ def worker(worker_id: int, found_queue: multiprocessing.Queue, stop_event: multi
 def run_single():
     print()
     print("  xDead Wallet Finder — single core")
-    print("  Target: 0xdead00001 — 0xdead20000")
+    print("  Target: 0xdead00001 — 0xdead10000")
     print("  Press Ctrl+C to stop")
     print()
 
@@ -97,9 +100,13 @@ def run_single():
 
     try:
         while True:
-            private_key = "0x" + os.urandom(32).hex()
-            account = Account.from_key(private_key)
-            address = account.address
+            pk_bytes = os.urandom(32)
+            try:
+                pk = eth_keys.PrivateKey(pk_bytes)
+                address = pk.public_key.to_checksum_address()
+            except Exception:
+                continue
+            private_key = "0x" + pk_bytes.hex()
             attempts += 1
 
             slot = check_address(address)
@@ -139,7 +146,7 @@ def run_single():
 def run_multi(cores: int):
     print()
     print(f"  xDead Wallet Finder — {cores} cores")
-    print(f"  Target: 0xdead00001 — 0xdead20000")
+    print(f"  Target: 0xdead00001 — 0xdead10000")
     print(f"  Press Ctrl+C to stop")
     print()
 
